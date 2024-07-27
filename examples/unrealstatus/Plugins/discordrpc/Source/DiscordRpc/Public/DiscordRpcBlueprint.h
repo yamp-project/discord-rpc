@@ -4,7 +4,6 @@
 #include "DiscordRpcBlueprint.generated.h"
 #include "Engine.h"
 
-
 // unreal's header tool hates clang-format
 // clang-format off
 

@@ -2,7 +2,6 @@
 #include "DiscordRpcPrivatePCH.h"
 #include "discord_rpc.h"
 
-
 DEFINE_LOG_CATEGORY(Discord)
 
 static UDiscordRpc* self = nullptr;
