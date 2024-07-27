@@ -25,7 +25,8 @@ static int prompt(char* line, size_t size)
     res = fgets(line, (int)size, stdin) ? 1 : 0;
     line[size - 1] = 0;
     nl = strchr(line, '\n');
-    if (nl) {
+    if (nl)
+    {
         *nl = 0;
     }
     return res;
@@ -33,7 +34,8 @@ static int prompt(char* line, size_t size)
 
 static void updateDiscordPresence()
 {
-    if (SendPresence) {
+    if (SendPresence)
+    {
         char buffer[256];
         DiscordRichPresence discordPresence;
         memset(&discordPresence, 0, sizeof(discordPresence));
@@ -54,17 +56,15 @@ static void updateDiscordPresence()
         discordPresence.instance = 0;
         Discord_UpdatePresence(&discordPresence);
     }
-    else {
+    else
+    {
         Discord_ClearPresence();
     }
 }
 
 static void handleDiscordReady(const DiscordUser* connectedUser)
 {
-    printf("\nDiscord: connected to user %s#%s - %s\n",
-           connectedUser->username,
-           connectedUser->discriminator,
-           connectedUser->userId);
+    printf("\nDiscord: connected to user %s#%s - %s\n", connectedUser->username, connectedUser->discriminator, connectedUser->userId);
 }
 
 static void handleDiscordDisconnected(int errcode, const char* message)
@@ -91,31 +91,34 @@ static void handleDiscordJoinRequest(const DiscordUser* request)
 {
     int response = -1;
     char yn[4];
-    printf("\nDiscord: join request from %s#%s - %s\n",
-           request->username,
-           request->discriminator,
-           request->userId);
-    do {
+    printf("\nDiscord: join request from %s#%s - %s\n", request->username, request->discriminator, request->userId);
+    do
+    {
         printf("Accept? (y/n)");
-        if (!prompt(yn, sizeof(yn))) {
+        if (!prompt(yn, sizeof(yn)))
+        {
             break;
         }
 
-        if (!yn[0]) {
+        if (!yn[0])
+        {
             continue;
         }
 
-        if (yn[0] == 'y') {
+        if (yn[0] == 'y')
+        {
             response = DISCORD_REPLY_YES;
             break;
         }
 
-        if (yn[0] == 'n') {
+        if (yn[0] == 'n')
+        {
             response = DISCORD_REPLY_NO;
             break;
         }
     } while (1);
-    if (response != -1) {
+    if (response != -1)
+    {
         Discord_Respond(request->userId, response);
     }
 }
@@ -141,24 +144,31 @@ static void gameLoop()
     StartTime = time(0);
 
     printf("You are standing in an open field west of a white house.\n");
-    while (prompt(line, sizeof(line))) {
-        if (line[0]) {
-            if (line[0] == 'q') {
+    while (prompt(line, sizeof(line)))
+    {
+        if (line[0])
+        {
+            if (line[0] == 'q')
+            {
                 break;
             }
 
-            if (line[0] == 't') {
+            if (line[0] == 't')
+            {
                 printf("Shutting off Discord.\n");
                 Discord_Shutdown();
                 continue;
             }
 
-            if (line[0] == 'c') {
-                if (SendPresence) {
+            if (line[0] == 'c')
+            {
+                if (SendPresence)
+                {
                     printf("Clearing presence information.\n");
                     SendPresence = 0;
                 }
-                else {
+                else
+                {
                     printf("Restoring presence information.\n");
                     SendPresence = 1;
                 }
@@ -166,18 +176,22 @@ static void gameLoop()
                 continue;
             }
 
-            if (line[0] == 'y') {
+            if (line[0] == 'y')
+            {
                 printf("Reinit Discord.\n");
                 discordInit();
                 continue;
             }
 
-            if (time(NULL) & 1) {
+            if (time(NULL) & 1)
+            {
                 printf("I don't understand that.\n");
             }
-            else {
+            else
+            {
                 space = strchr(line, ' ');
-                if (space) {
+                if (space)
+                {
                     *space = 0;
                 }
                 printf("I don't know the word \"%s\".\n", line);

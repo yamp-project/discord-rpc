@@ -24,12 +24,14 @@
 template <size_t Len>
 inline size_t StringCopy(char (&dest)[Len], const char* src)
 {
-    if (!src || !Len) {
+    if (!src || !Len)
+    {
         return 0;
     }
     size_t copied;
     char* out = dest;
-    for (copied = 1; *src && copied < Len; ++copied) {
+    for (copied = 1; *src && copied < Len; ++copied)
+    {
         *out++ = *src++;
     }
     *out = 0;
@@ -40,21 +42,19 @@ size_t JsonWriteHandshakeObj(char* dest, size_t maxLen, int version, const char*
 
 // Commands
 struct DiscordRichPresence;
-size_t JsonWriteRichPresenceObj(char* dest,
-                                size_t maxLen,
-                                int nonce,
-                                int pid,
-                                const DiscordRichPresence* presence);
+size_t JsonWriteRichPresenceObj(char* dest, size_t maxLen, int nonce, int pid, const DiscordRichPresence* presence);
 size_t JsonWriteSubscribeCommand(char* dest, size_t maxLen, int nonce, const char* evtName);
 
 size_t JsonWriteUnsubscribeCommand(char* dest, size_t maxLen, int nonce, const char* evtName);
 
 size_t JsonWriteJoinReply(char* dest, size_t maxLen, const char* userId, int reply, int nonce);
 
-// I want to use as few allocations as I can get away with, and to do that with RapidJson, you need
-// to supply some of your own allocators for stuff rather than use the defaults
+// I want to use as few allocations as I can get away with, and to do that with
+// RapidJson, you need to supply some of your own allocators for stuff rather
+// than use the defaults
 
-class LinearAllocator {
+class LinearAllocator
+{
 public:
     char* buffer_;
     char* end_;
@@ -62,9 +62,7 @@ public:
     {
         assert(0); // needed for some default case in rapidjson, should not use
     }
-    LinearAllocator(char* buffer, size_t size)
-      : buffer_(buffer)
-      , end_(buffer + size)
+    LinearAllocator(char* buffer, size_t size) : buffer_(buffer), end_(buffer + size)
     {
     }
     static const bool kNeedFree = false;
@@ -72,7 +70,8 @@ public:
     {
         char* res = buffer_;
         buffer_ += size;
-        if (buffer_ > end_) {
+        if (buffer_ > end_)
+        {
             buffer_ = res;
             return nullptr;
         }
@@ -80,7 +79,8 @@ public:
     }
     void* Realloc(void* originalPtr, size_t originalSize, size_t newSize)
     {
-        if (newSize == 0) {
+        if (newSize == 0)
+        {
             return nullptr;
         }
         // allocate how much you need in the first place
@@ -98,81 +98,83 @@ public:
 };
 
 template <size_t Size>
-class FixedLinearAllocator : public LinearAllocator {
+class FixedLinearAllocator : public LinearAllocator
+{
 public:
     char fixedBuffer_[Size];
-    FixedLinearAllocator()
-      : LinearAllocator(fixedBuffer_, Size)
+    FixedLinearAllocator() : LinearAllocator(fixedBuffer_, Size)
     {
     }
     static const bool kNeedFree = false;
 };
 
 // wonder why this isn't a thing already, maybe I missed it
-class DirectStringBuffer {
+class DirectStringBuffer
+{
 public:
     using Ch = char;
     char* buffer_;
     char* end_;
     char* current_;
 
-    DirectStringBuffer(char* buffer, size_t maxLen)
-      : buffer_(buffer)
-      , end_(buffer + maxLen)
-      , current_(buffer)
+    DirectStringBuffer(char* buffer, size_t maxLen) : buffer_(buffer), end_(buffer + maxLen), current_(buffer)
     {
     }
 
     void Put(char c)
     {
-        if (current_ < end_) {
+        if (current_ < end_)
+        {
             *current_++ = c;
         }
     }
-    void Flush() {}
-    size_t GetSize() const { return (size_t)(current_ - buffer_); }
+    void Flush()
+    {
+    }
+    size_t GetSize() const
+    {
+        return (size_t)(current_ - buffer_);
+    }
 };
 
 using MallocAllocator = rapidjson::CrtAllocator;
 using PoolAllocator = rapidjson::MemoryPoolAllocator<MallocAllocator>;
 using UTF8 = rapidjson::UTF8<char>;
-// Writer appears to need about 16 bytes per nested object level (with 64bit size_t)
+// Writer appears to need about 16 bytes per nested object level (with 64bit
+// size_t)
 using StackAllocator = FixedLinearAllocator<2048>;
 constexpr size_t WriterNestingLevels = 2048 / (2 * sizeof(size_t));
-using JsonWriterBase =
-  rapidjson::Writer<DirectStringBuffer, UTF8, UTF8, StackAllocator, rapidjson::kWriteNoFlags>;
-class JsonWriter : public JsonWriterBase {
+using JsonWriterBase = rapidjson::Writer<DirectStringBuffer, UTF8, UTF8, StackAllocator, rapidjson::kWriteNoFlags>;
+class JsonWriter : public JsonWriterBase
+{
 public:
     DirectStringBuffer stringBuffer_;
     StackAllocator stackAlloc_;
 
-    JsonWriter(char* dest, size_t maxLen)
-      : JsonWriterBase(stringBuffer_, &stackAlloc_, WriterNestingLevels)
-      , stringBuffer_(dest, maxLen)
-      , stackAlloc_()
+    JsonWriter(char* dest, size_t maxLen) : JsonWriterBase(stringBuffer_, &stackAlloc_, WriterNestingLevels), stringBuffer_(dest, maxLen), stackAlloc_()
     {
     }
 
-    size_t Size() const { return stringBuffer_.GetSize(); }
+    size_t Size() const
+    {
+        return stringBuffer_.GetSize();
+    }
 };
 
 using JsonDocumentBase = rapidjson::GenericDocument<UTF8, PoolAllocator, StackAllocator>;
-class JsonDocument : public JsonDocumentBase {
+class JsonDocument : public JsonDocumentBase
+{
 public:
     static const int kDefaultChunkCapacity = 32 * 1024;
-    // json parser will use this buffer first, then allocate more if needed; I seriously doubt we
-    // send any messages that would use all of this, though.
+    // json parser will use this buffer first, then allocate more if needed; I
+    // seriously doubt we send any messages that would use all of this, though.
     char parseBuffer_[32 * 1024];
     MallocAllocator mallocAllocator_;
     PoolAllocator poolAllocator_;
     StackAllocator stackAllocator_;
     JsonDocument()
-      : JsonDocumentBase(rapidjson::kObjectType,
-                         &poolAllocator_,
-                         sizeof(stackAllocator_.fixedBuffer_),
-                         &stackAllocator_)
-      , poolAllocator_(parseBuffer_, sizeof(parseBuffer_), kDefaultChunkCapacity, &mallocAllocator_)
-      , stackAllocator_()
+        : JsonDocumentBase(rapidjson::kObjectType, &poolAllocator_, sizeof(stackAllocator_.fixedBuffer_), &stackAllocator_),
+          poolAllocator_(parseBuffer_, sizeof(parseBuffer_), kDefaultChunkCapacity, &mallocAllocator_), stackAllocator_()
     {
     }
 };
@@ -181,9 +183,11 @@ using JsonValue = rapidjson::GenericValue<UTF8, PoolAllocator>;
 
 inline JsonValue* GetObjMember(JsonValue* obj, const char* name)
 {
-    if (obj) {
+    if (obj)
+    {
         auto member = obj->FindMember(name);
-        if (member != obj->MemberEnd() && member->value.IsObject()) {
+        if (member != obj->MemberEnd() && member->value.IsObject())
+        {
             return &member->value;
         }
     }
@@ -192,22 +196,24 @@ inline JsonValue* GetObjMember(JsonValue* obj, const char* name)
 
 inline int GetIntMember(JsonValue* obj, const char* name, int notFoundDefault = 0)
 {
-    if (obj) {
+    if (obj)
+    {
         auto member = obj->FindMember(name);
-        if (member != obj->MemberEnd() && member->value.IsInt()) {
+        if (member != obj->MemberEnd() && member->value.IsInt())
+        {
             return member->value.GetInt();
         }
     }
     return notFoundDefault;
 }
 
-inline const char* GetStrMember(JsonValue* obj,
-                                const char* name,
-                                const char* notFoundDefault = nullptr)
+inline const char* GetStrMember(JsonValue* obj, const char* name, const char* notFoundDefault = nullptr)
 {
-    if (obj) {
+    if (obj)
+    {
         auto member = obj->FindMember(name);
-        if (member != obj->MemberEnd() && member->value.IsString()) {
+        if (member != obj->MemberEnd() && member->value.IsString())
+        {
             return member->value.GetString();
         }
     }

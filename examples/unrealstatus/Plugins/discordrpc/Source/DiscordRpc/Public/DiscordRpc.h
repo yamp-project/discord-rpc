@@ -4,7 +4,8 @@
 
 #include "ModuleManager.h"
 
-class FDiscordRpcModule : public IModuleInterface {
+class FDiscordRpcModule : public IModuleInterface
+{
 public:
     /** IModuleInterface implementation */
     virtual void StartupModule() override;

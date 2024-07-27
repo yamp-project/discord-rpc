@@ -1,6 +1,7 @@
-#include "DiscordRpcPrivatePCH.h"
 #include "DiscordRpcBlueprint.h"
+#include "DiscordRpcPrivatePCH.h"
 #include "discord_rpc.h"
+
 
 DEFINE_LOG_CATEGORY(Discord)
 
@@ -13,13 +14,9 @@ static void ReadyHandler(const DiscordUser* connectedUser)
     ud.username = ANSI_TO_TCHAR(connectedUser->username);
     ud.discriminator = ANSI_TO_TCHAR(connectedUser->discriminator);
     ud.avatar = ANSI_TO_TCHAR(connectedUser->avatar);
-    UE_LOG(Discord,
-           Log,
-           TEXT("Discord connected to %s - %s#%s"),
-           *ud.userId,
-           *ud.username,
-           *ud.discriminator);
-    if (self) {
+    UE_LOG(Discord, Log, TEXT("Discord connected to %s - %s#%s"), *ud.userId, *ud.username, *ud.discriminator);
+    if (self)
+    {
         self->IsConnected = true;
         self->OnConnected.Broadcast(ud);
     }
@@ -29,7 +26,8 @@ static void DisconnectHandler(int errorCode, const char* message)
 {
     auto msg = FString(message);
     UE_LOG(Discord, Log, TEXT("Discord disconnected (%d): %s"), errorCode, *msg);
-    if (self) {
+    if (self)
+    {
         self->IsConnected = false;
         self->OnDisconnected.Broadcast(errorCode, msg);
     }
@@ -39,7 +37,8 @@ static void ErroredHandler(int errorCode, const char* message)
 {
     auto msg = FString(message);
     UE_LOG(Discord, Log, TEXT("Discord error (%d): %s"), errorCode, *msg);
-    if (self) {
+    if (self)
+    {
         self->OnErrored.Broadcast(errorCode, msg);
     }
 }
@@ -48,7 +47,8 @@ static void JoinGameHandler(const char* joinSecret)
 {
     auto secret = FString(joinSecret);
     UE_LOG(Discord, Log, TEXT("Discord join %s"), *secret);
-    if (self) {
+    if (self)
+    {
         self->OnJoin.Broadcast(secret);
     }
 }
@@ -57,7 +57,8 @@ static void SpectateGameHandler(const char* spectateSecret)
 {
     auto secret = FString(spectateSecret);
     UE_LOG(Discord, Log, TEXT("Discord spectate %s"), *secret);
-    if (self) {
+    if (self)
+    {
         self->OnSpectate.Broadcast(secret);
     }
 }
@@ -69,20 +70,14 @@ static void JoinRequestHandler(const DiscordUser* request)
     ud.username = ANSI_TO_TCHAR(request->username);
     ud.discriminator = ANSI_TO_TCHAR(request->discriminator);
     ud.avatar = ANSI_TO_TCHAR(request->avatar);
-    UE_LOG(Discord,
-           Log,
-           TEXT("Discord join request from %s - %s#%s"),
-           *ud.userId,
-           *ud.username,
-           *ud.discriminator);
-    if (self) {
+    UE_LOG(Discord, Log, TEXT("Discord join request from %s - %s#%s"), *ud.userId, *ud.username, *ud.discriminator);
+    if (self)
+    {
         self->OnJoinRequest.Broadcast(ud);
     }
 }
 
-void UDiscordRpc::Initialize(const FString& applicationId,
-                             bool autoRegister,
-                             const FString& optionalSteamId)
+void UDiscordRpc::Initialize(const FString& applicationId, bool autoRegister, const FString& optionalSteamId)
 {
     self = this;
     IsConnected = false;
@@ -90,19 +85,21 @@ void UDiscordRpc::Initialize(const FString& applicationId,
     handlers.ready = ReadyHandler;
     handlers.disconnected = DisconnectHandler;
     handlers.errored = ErroredHandler;
-    if (OnJoin.IsBound()) {
+    if (OnJoin.IsBound())
+    {
         handlers.joinGame = JoinGameHandler;
     }
-    if (OnSpectate.IsBound()) {
+    if (OnSpectate.IsBound())
+    {
         handlers.spectateGame = SpectateGameHandler;
     }
-    if (OnJoinRequest.IsBound()) {
+    if (OnJoinRequest.IsBound())
+    {
         handlers.joinRequest = JoinRequestHandler;
     }
     auto appId = StringCast<ANSICHAR>(*applicationId);
     auto steamId = StringCast<ANSICHAR>(*optionalSteamId);
-    Discord_Initialize(
-      (const char*)appId.Get(), &handlers, autoRegister, (const char*)steamId.Get());
+    Discord_Initialize((const char*)appId.Get(), &handlers, autoRegister, (const char*)steamId.Get());
 }
 
 void UDiscordRpc::Shutdown()

@@ -12,26 +12,21 @@ void FDiscordRpcModule::StartupModule()
 #if defined(DISCORD_DYNAMIC_LIB)
     // Get the base directory of this plugin
     FString BaseDir = IPluginManager::Get().FindPlugin("DiscordRpc")->GetBaseDir();
-    const FString SDKDir =
-      FPaths::Combine(*BaseDir, TEXT("Source"), TEXT("ThirdParty"), TEXT("DiscordRpcLibrary"));
+    const FString SDKDir = FPaths::Combine(*BaseDir, TEXT("Source"), TEXT("ThirdParty"), TEXT("DiscordRpcLibrary"));
 #if PLATFORM_WINDOWS
     const FString LibName = TEXT("discord-rpc");
     const FString LibDir = FPaths::Combine(*SDKDir, TEXT("Win64"));
-    if (!LoadDependency(LibDir, LibName, DiscordRpcLibraryHandle)) {
-        FMessageDialog::Open(
-          EAppMsgType::Ok,
-          LOCTEXT(LOCTEXT_NAMESPACE,
-                  "Failed to load DiscordRpc plugin. Plug-in will not be functional."));
+    if (!LoadDependency(LibDir, LibName, DiscordRpcLibraryHandle))
+    {
+        FMessageDialog::Open(EAppMsgType::Ok, LOCTEXT(LOCTEXT_NAMESPACE, "Failed to load DiscordRpc plugin. Plug-in will not be functional."));
         FreeDependency(DiscordRpcLibraryHandle);
     }
 #elif PLATFORM_MAC
     const FString LibName = TEXT("libdiscord-rpc");
     const FString LibDir = FPaths::Combine(*SDKDir, TEXT("Mac"));
-    if (!LoadDependency(LibDir, LibName, DiscordRpcLibraryHandle)) {
-        FMessageDialog::Open(
-          EAppMsgType::Ok,
-          LOCTEXT(LOCTEXT_NAMESPACE,
-                  "Failed to load DiscordRpc plugin. Plug-in will not be functional."));
+    if (!LoadDependency(LibDir, LibName, DiscordRpcLibraryHandle))
+    {
+        FMessageDialog::Open(EAppMsgType::Ok, LOCTEXT(LOCTEXT_NAMESPACE, "Failed to load DiscordRpc plugin. Plug-in will not be functional."));
         FreeDependency(DiscordRpcLibraryHandle);
     }
 #endif
@@ -56,7 +51,8 @@ bool FDiscordRpcModule::LoadDependency(const FString& Dir, const FString& Name, 
 
     Handle = FPlatformProcess::GetDllHandle(*Path);
 
-    if (Handle == nullptr) {
+    if (Handle == nullptr)
+    {
         return false;
     }
 
@@ -65,7 +61,8 @@ bool FDiscordRpcModule::LoadDependency(const FString& Dir, const FString& Name, 
 
 void FDiscordRpcModule::FreeDependency(void*& Handle)
 {
-    if (Handle != nullptr) {
+    if (Handle != nullptr)
+    {
         FPlatformProcess::FreeDllHandle(Handle);
         Handle = nullptr;
     }

@@ -10,6 +10,7 @@
  *
  */
 UCLASS()
-class UNREALSTATUS_API AunrealstatusGameModeBase : public AGameModeBase {
+class UNREALSTATUS_API AunrealstatusGameModeBase : public AGameModeBase
+{
     GENERATED_BODY()
 };
